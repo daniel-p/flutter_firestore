@@ -1,4 +1,7 @@
 
+language: generic
+? "os osx_image"
+: xcode10.1
 before_script: 
   - "pip install six"
   - "brew update"
@@ -10,9 +13,6 @@ before_script:
 cache: 
   directories: 
     - $HOME/.pub-cache
-language: generic
-? "os osx_image"
-: xcode10.1
 script: 
   - "./flutter/bin/flutter -v build ios --no-codesign"
 
