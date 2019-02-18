@@ -1,5 +1,5 @@
 os: osx 
-language: generic 
+language: dart 
 dist: xenial
 addons:
   apt:
