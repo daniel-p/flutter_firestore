@@ -11,6 +11,6 @@ cache:
   directories: 
     - $HOME/.pub-cache
 language: generic
-os: osx
+osx_image: xcode10.1
 script: 
   - "./flutter/bin/flutter -v build ios --no-codesign"
