@@ -1,21 +1,16 @@
+
 os: osx 
-language: dart 
-dist: xenial
-addons:
-  apt:
-    packages:
-      - lib32stdc++6
-install:
-  - git clone https://github.com/flutter/flutter.git -b beta
-  - ./flutter/bin/flutter doctor
+language: generic 
 before_script: 
  - pip install six
  - brew update 
  - brew install --HEAD libimobiledevice 
  - brew install ideviceinstaller 
  - brew install ios-deploy 
+  - install  - ./flutter/bin/flutter doctor
  - git clone https://github.com/flutter/flutter.git -b beta --depth 1 
-script: 
+
+ script: 
  - flutter/bin/flutter build ios --debug --no-codesign
  cache:
   directories:
