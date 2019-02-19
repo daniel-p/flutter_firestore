@@ -37,9 +37,6 @@ before_install:
 cache:
   directories:
     - $HOME/.pub-cache
-install:
-    - npm install -g firebase-tools
-after_success:
 deploy:
   provider: firebase
   token: 
