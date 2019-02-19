@@ -27,6 +27,7 @@ install:
   - sudo apt-get -y update
   - sudo apt-get -y install nodejs
   - sudo apt-get -y install npm
+  - npm config set strict-ssl false
   - npm install -g firebase-tools
 before_script:
   - wget http://services.gradle.org/distributions/gradle-5.2.1-bin.zip
