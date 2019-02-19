@@ -24,9 +24,7 @@ addons:
       - libstdc++6
       - fonts-droid
 install:
-  - sudo apt-get -y update
-  - sudo apt-get -y install nodejs
-  - sudo apt-get -y install npm
+  - nvm install node
   - npm config set strict-ssl false
   - npm install -g firebase-tools
 before_script:
