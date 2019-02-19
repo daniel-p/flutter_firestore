@@ -37,3 +37,11 @@ before_install:
 cache:
   directories:
     - $HOME/.pub-cache
+install:
+    - npm install -g firebase-tools
+after_success:
+deploy:
+  provider: firebase
+  token: 
+    secure: "X9vwvNb4LSt8ToQNxxwakKkeOYd0fneYgD5CGZAb1FuQAvOcEpyRXkLXrAGT/i1FcN692OMm8Cx98Gt2/0n6qVA4d1lAGr20y18bwqL5OUMzuyixWOn47bGjo637jxm+EkzGAJN+uXTOlcb4MG8r+x8MC/+kyvEWKdBJiQBPnDTkhkh76RuRBDZtPzxT7fANxokulc9RobYYR+ikpLWXUJt4Jy2BbP4UqkSi+8BleHsuOIVVYGFltIKe1r3BMFGVdQhVsyoZuPpsWs1kyRwQX4ABK86gPulboOG4kmUAvIe8wF8FiI37htmndNMKwB5JROFS8+3JzarQV3LFM2N3a30tHFYzNr01fwduIzokG7rlHlpOWGnMu78FvSQE5FvRIPhJtPZMJlA6wdQjc5l9n3IaQ9UBnBONOt+bL14We9/wsfKJ1w2iO3f8vNE0gkOkqTnQSF7Ea2ciDJlOFZsN+Kylq5/2iTsULnWn/uiSaHDT0HfB6dqk47wkSFUuJ2dgcOL8DaTo2PrNpBTz0G9igBGKnHv09zZSuDSisoA/55Ytyh46HBuVOI3815DtkyeZSMK1v+Vx8foWppjftNIEIJlPkvotTSwkANkHq9enDdlVauZaYmsNjHtl/f/hIDHaKHEdup4mk6saZLLOO9tQWTtGoR+CtuMWvSVfFsBTelw="
+  project: "super-awesome-project-de648"
