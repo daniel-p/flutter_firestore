@@ -57,3 +57,4 @@ RUN flutter doctor -v
 RUN flutter upgrade
 
 ENTRYPOINT [ "flutter" ]
+
