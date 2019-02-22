@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 void main() => runApp(MyApp());
 
@@ -34,10 +35,10 @@ class _MyHomePageState extends State<MyHomePage> {
       Firestore.instance.collection('messages').document().setData({
         'content': content,
         'from': 'Me',
-        'timestamp': new DateTime.now().millisecondsSinceEpoch
+        'timestamp': new DateTime.now().toUtc().millisecondsSinceEpoch
       });
       textController.clear();
-      FocusScope.of(context).requestFocus(new FocusNode());
+      //FocusScope.of(context).requestFocus(new FocusNode());
     }
   }
 
@@ -48,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             children: <Widget>[
               Text(
-                document['from'],
+                document['from'] + ' ' + DateFormat('HH:mm').format(new DateTime.fromMillisecondsSinceEpoch(document['timestamp'])),
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
               Text(
@@ -81,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
               stream: Firestore.instance
                   .collection('messages')
                   .orderBy('timestamp', descending: true)
+                  .limit(50)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
