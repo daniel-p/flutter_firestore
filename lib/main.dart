@@ -37,16 +37,38 @@ class _MyHomePageState extends State<MyHomePage> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final textController = TextEditingController();
 
-  Future<Null> _signIn() async {
+  Future<bool> _signIn() async {
     if (_googleSignIn.currentUser == null || await _firebaseAuth.currentUser() == null) {
-      var user = await _googleSignIn.signIn();
-      var auth = await user.authentication;
-      var credential = GoogleAuthProvider.getCredential(
-        accessToken: auth.accessToken,
-        idToken: auth.idToken,
-      );
-      await _firebaseAuth.signInWithCredential(credential);
+      try {
+        var user = await _googleSignIn.signIn();
+        var auth = await user.authentication;
+        var credential = GoogleAuthProvider.getCredential(
+          accessToken: auth.accessToken,
+          idToken: auth.idToken,
+        );
+        await _firebaseAuth.signInWithCredential(credential);
+      } catch (e) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Oops!"),
+              content: Text(e.toString()),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("OK"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          }
+        );
+        return false;
+      }
     }
+    return true;
   }
 
   Future<Null> _send(String content, String imageUrl) async {
@@ -54,7 +76,10 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    await _signIn();
+    var result = await _signIn();
+    if (!result) {
+      return;
+    }
 
     Firestore.instance.collection('messages').document().setData({
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
