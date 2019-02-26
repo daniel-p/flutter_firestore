@@ -1,16 +1,18 @@
 # flutter_firestore
 
-A new Flutter project.
+A cross-platform chat app developed with [Flutter](https://flutter.dev) and [Firebase](https://firebase.google.com)
 
-## Getting Started
+### Tell me more...
 
-This project is a starting point for a Flutter application.
+Works on both Android and iOS sharing 100% of the code! (automatically generated boilerplate code of course is not included in the aforementioned number)  
+Zero back-end code! (well, except a few security rules but who counts those)  
+Requires a Google account to post (stalking is always free and anonymous. Promise!)  
 
-A few resources to get you started if this is your first Flutter project:
+### But what can it do?
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+Chat in real time with unlimited number of people  
+Share images  
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+### Is that all?
+
+Well, yeah! The whole app is less than 256 lines of code. What do you expect?
