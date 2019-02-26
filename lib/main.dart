@@ -143,13 +143,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 )
               : null,
               document['img'] != null ?
-                CachedNetworkImage(
-                  imageUrl: document['img'],
-                  placeholder: (context, url) => new CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => new Icon(Icons.error),
+                SizedBox(
+                  child: CachedNetworkImage(
+                    imageUrl: document['img'],
+                    placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                    errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
+                    fit: BoxFit.cover,
+                  ),
                   width: 200,
                   height: 200,
-                  fit: BoxFit.cover,
                 )
               : null,
             ].where((w) => w != null).toList(),
