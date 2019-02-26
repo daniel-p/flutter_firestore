@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,42 +38,57 @@ class _MyHomePageState extends State<MyHomePage> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final textController = TextEditingController();
 
+  void _showAlert(String content) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Oops!"),
+            content: Text(content),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
+
   Future<bool> _signIn() async {
-    if (_googleSignIn.currentUser == null || await _firebaseAuth.currentUser() == null) {
-      try {
-        var user = await _googleSignIn.signIn();
+    try {
+      var user = _googleSignIn.currentUser;
+      if (user == null) {
+        //_googleSignIn.signInSilently();
+      }
+      if (user == null) {
+        user = await _googleSignIn.signIn();
+      }
+      if (user == null) {
+        return false;
+      }
+      if (await _firebaseAuth.currentUser() == null) {
         var auth = await user.authentication;
         var credential = GoogleAuthProvider.getCredential(
           accessToken: auth.accessToken,
           idToken: auth.idToken,
         );
         await _firebaseAuth.signInWithCredential(credential);
-      } catch (e) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text("Oops!"),
-              content: Text(e.toString()),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text("OK"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            );
-          }
-        );
-        return false;
       }
+      return true;
+    } on PlatformException catch (e) {
+      _showAlert(e.code);
+    } catch (e) {
+      _showAlert(e.toString());
     }
-    return true;
+    return false;
   }
 
   Future<Null> _send(String content, String imageUrl) async {
-    if ((content == null || content.isEmpty) && (imageUrl == null || imageUrl.isEmpty)) {
+    if ((content == null || content.isEmpty) &&
+        (imageUrl == null || imageUrl.isEmpty)) {
       return;
     }
 
@@ -97,7 +113,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<Null> _sendPhoto() async {
     var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-    var ref = FirebaseStorage.instance.ref().child(DateTime.now().toUtc().millisecondsSinceEpoch.toString());
+    var ref = FirebaseStorage.instance
+        .ref()
+        .child(DateTime.now().toUtc().millisecondsSinceEpoch.toString());
     await ref.putFile(imageFile).onComplete;
     String downloadUrl = await ref.getDownloadURL();
     _send(null, downloadUrl);
@@ -106,63 +124,76 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildListItem(BuildContext context, DocumentSnapshot document) {
     return Row(
       children: <Widget>[
-        document['avatar'] != null ?
-          ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: document['avatar'],
-              width: 32,
-              height: 32,
-              fit: BoxFit.cover,
-            ),
-          )
-        :
-        Container(child:
-          Center(child:
-            Text(
-              document['from'][0],
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-              color: Colors.green, borderRadius: BorderRadius.circular(16)
-          )
-        ),
+        document['avatar'] != null
+            ? ClipOval(
+                child: CachedNetworkImage(
+                  imageUrl: document['avatar'],
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Container(
+                child: Center(
+                  child: Text(
+                    document['from'][0],
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(16)),
+              ),
         Container(
           child: Column(
             children: <Widget>[
               Text(
-                document['from'] + ' ' + DateFormat('EEE H:mm').format(DateTime.fromMillisecondsSinceEpoch(document['timestamp'])),
-                style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+                document['from'] +
+                    ' ' +
+                    DateFormat('EEE H:mm').format(
+                        DateTime.fromMillisecondsSinceEpoch(
+                            document['timestamp'])),
+                style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
               ),
-              document['content'] != null ?
-                Text(
-                  document['content'],
-                  style: TextStyle(fontSize: 16),
-                )
-              : null,
-              document['img'] != null ?
-                SizedBox(
-                  child: CachedNetworkImage(
-                    imageUrl: document['img'],
-                    placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                    errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
-                    fit: BoxFit.cover,
-                  ),
-                  width: 200,
-                  height: 200,
-                )
-              : null,
+              document['content'] != null
+                  ? Text(
+                      document['content'],
+                      style: TextStyle(fontSize: 16),
+                    )
+                  : null,
+              document['img'] != null
+                  ? SizedBox(
+                      child: CachedNetworkImage(
+                        imageUrl: document['img'],
+                        placeholder: (context, url) =>
+                            Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) =>
+                            Center(child: Icon(Icons.error)),
+                        fit: BoxFit.cover,
+                      ),
+                      width: 200,
+                      height: 200,
+                    )
+                  : null,
             ].where((w) => w != null).toList(),
             crossAxisAlignment: CrossAxisAlignment.start,
           ),
           margin: EdgeInsets.only(left: 8),
           padding: EdgeInsets.all(4),
           decoration: BoxDecoration(
-              color: Colors.grey[200], borderRadius: BorderRadius.circular(4)
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
           ),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 56),
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 56),
         ),
       ],
       crossAxisAlignment: CrossAxisAlignment.start,
