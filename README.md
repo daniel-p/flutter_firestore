@@ -1,4 +1,4 @@
-# flutter_firestore
+# Flutters
 
 A cross-platform chat app developed with [Flutter](https://flutter.dev) and [Firebase](https://firebase.google.com)
 
@@ -15,4 +15,4 @@ Share images
 
 ### Is that all?
 
-Well, yeah! The whole app is less than 256 lines of code. What do you expect?
+Well, yeah! The whole app is less than 256 lines of code (including the UI!). What do you expect?
