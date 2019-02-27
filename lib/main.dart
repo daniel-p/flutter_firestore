@@ -1,12 +1,12 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() => runApp(MyApp());
 
@@ -38,6 +38,21 @@ class _MyHomePageState extends State<MyHomePage> {
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final textController = TextEditingController();
 
+  String _formatTimestamp(dynamic timestamp) {
+    if (timestamp == null) {
+      return '';
+    }
+    DateTime date;
+    if (timestamp is DateTime) {
+      date = timestamp;
+    } else if (timestamp is int) {
+      date = DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true);
+    } else {
+      return '';
+    }
+    return DateFormat('EEE H:mm').format(date);
+  }
+
   void _showAlert(String content) {
     showDialog(
         context: context,
@@ -61,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       var user = _googleSignIn.currentUser;
       if (user == null) {
-        //_googleSignIn.signInSilently();
+        _googleSignIn.signInSilently();
       }
       if (user == null) {
         user = await _googleSignIn.signIn();
@@ -87,8 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Null> _send(String content, String imageUrl) async {
-    if ((content == null || content.isEmpty) &&
-        (imageUrl == null || imageUrl.isEmpty)) {
+    if ((content == null || content.trim().isEmpty) && imageUrl == null) {
       return;
     }
 
@@ -98,10 +112,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Firestore.instance.collection('messages').document().setData({
-      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+      'timestamp': FieldValue.serverTimestamp(),
       'from': _googleSignIn.currentUser.displayName,
       'avatar': _googleSignIn.currentUser.photoUrl,
-      'content': content,
+      'content': content?.trim(),
       'img': imageUrl,
     });
     textController.clear();
@@ -112,7 +126,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Null> _sendPhoto() async {
-    var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+    var imageFile = await ImagePicker.pickImage(
+        source: ImageSource.gallery, maxWidth: 200, maxHeight: 200);
+    if (imageFile == null) {
+      return;
+    }
     var ref = FirebaseStorage.instance
         .ref()
         .child(DateTime.now().toUtc().millisecondsSinceEpoch.toString());
@@ -155,9 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 document['from'] +
                     ' ' +
-                    DateFormat('EEE H:mm').format(
-                        DateTime.fromMillisecondsSinceEpoch(
-                            document['timestamp'])),
+                    _formatTimestamp(document['timestamp']),
                 style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
@@ -217,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: Text('Loading...'));
+                  return Center(child: CircularProgressIndicator());
                 }
                 return ListView.separated(
                   separatorBuilder: (context, index) => Container(
@@ -233,24 +249,32 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           Divider(height: 1),
+          Container(
+            child: Scrollbar(
+              child: TextField(
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (s) async {
+                  await _sendText(textController.text);
+                },
+                controller: textController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Type a message...',
+                  contentPadding: EdgeInsets.fromLTRB(12, 12, 6, 6),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(
+              maxHeight: 96,
+            ),
+          ),
           Row(
             children: <Widget>[
-              Expanded(
-                child: Container(
-                  child: TextField(
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    onSubmitted: (s) async {
-                      await _sendText(textController.text);
-                    },
-                    controller: textController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Type a message...',
-                    ),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                ),
+              IconButton(
+                icon: Icon(Icons.photo, color: Theme.of(context).primaryColor),
+                onPressed: _sendPhoto,
               ),
               IconButton(
                 icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
@@ -259,10 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ],
-          ),
-          IconButton(
-            icon: Icon(Icons.photo, color: Theme.of(context).primaryColor),
-            onPressed: _sendPhoto,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
           ),
         ],
         crossAxisAlignment: CrossAxisAlignment.start,
