@@ -13,10 +13,24 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    ));
     return MaterialApp(
       title: 'Flutters',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        appBarTheme: AppBarTheme(
+          elevation: 1.2,
+          brightness: Brightness.light,
+          color: Colors.white,
+          textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.black),
+          iconTheme: Theme.of(context)
+            .iconTheme
+            .copyWith(color: Theme.of(context).primaryColor),
+        ),
+        iconTheme: Theme.of(context)
+            .iconTheme
+            .copyWith(color: Theme.of(context).primaryColor),
         canvasColor: Colors.white,
       ),
       home: MyHomePage(title: 'Flutters'),
@@ -53,12 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return DateFormat('EEE H:mm').format(date);
   }
 
-  void _showAlert(String content) {
+  void _showAlert(String content, [String title = "Oops!"]) {
     showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("Oops!"),
+            title: Text(title),
             content: Text(content),
             actions: <Widget>[
               FlatButton(
@@ -101,13 +115,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return false;
   }
 
+  Future<bool> _signOut() async {
+    try {
+      if (await _firebaseAuth.currentUser() != null) {
+        await _firebaseAuth.signOut();
+      }
+      if (_googleSignIn.currentUser != null) {
+        await _googleSignIn.signOut();
+        _showAlert("You have signed out", "Cya!");
+      }
+      return true;
+    } on PlatformException catch (e) {
+      _showAlert(e.code);
+    } catch (e) {
+      _showAlert(e.toString());
+    }
+    return false;
+  }
+
   Future<Null> _send(String content, String imageUrl) async {
     if ((content == null || content.trim().isEmpty) && imageUrl == null) {
       return;
     }
 
-    var result = await _signIn();
-    if (!result) {
+    if (await _signIn() == false) {
       return;
     }
 
@@ -125,10 +156,13 @@ class _MyHomePageState extends State<MyHomePage> {
     await _send(content, null);
   }
 
-  Future<Null> _sendPhoto() async {
+  Future<Null> _sendPhoto(ImageSource source) async {
     var imageFile = await ImagePicker.pickImage(
-        source: ImageSource.gallery, maxWidth: 200, maxHeight: 200);
+        source: source, maxWidth: 200, maxHeight: 400);
     if (imageFile == null) {
+      return;
+    }
+    if (await _signIn() == false) {
       return;
     }
     var ref = FirebaseStorage.instance
@@ -155,10 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Center(
                   child: Text(
                     document['from'][0],
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 ),
                 width: 32,
@@ -175,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ' ' +
                     _formatTimestamp(document['timestamp']),
                 style: TextStyle(
-                    color: Colors.grey,
+                    color: Colors.black54,
                     fontSize: 12,
                     fontWeight: FontWeight.bold),
               ),
@@ -194,6 +225,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         errorWidget: (context, url, error) =>
                             Center(child: Icon(Icons.error)),
                         fit: BoxFit.cover,
+                        width: 200,
+                        height: 200,
                       ),
                       width: 200,
                       height: 200,
@@ -205,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
           margin: EdgeInsets.only(left: 8),
           padding: EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: Colors.grey[100],
             borderRadius: BorderRadius.circular(4),
           ),
           constraints:
@@ -221,6 +254,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.exit_to_app),
+              onPressed: () => _signOut(),
+            ),
+        ],
       ),
       body: Column(
         children: <Widget>[
@@ -255,9 +294,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (s) async {
-                  await _sendText(textController.text);
-                },
+                onSubmitted: (s) => _sendText(textController.text),
                 controller: textController,
                 decoration: InputDecoration(
                   border: InputBorder.none,
@@ -273,14 +310,16 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             children: <Widget>[
               IconButton(
-                icon: Icon(Icons.photo, color: Theme.of(context).primaryColor),
-                onPressed: _sendPhoto,
+                icon: Icon(Icons.photo),
+                onPressed: () => _sendPhoto(ImageSource.gallery),
               ),
               IconButton(
-                icon: Icon(Icons.send, color: Theme.of(context).primaryColor),
-                onPressed: () async {
-                  await _sendText(textController.text);
-                },
+                icon: Icon(Icons.camera_alt),
+                onPressed: () => _sendPhoto(ImageSource.camera),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () => _sendText(textController.text),
               ),
             ],
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
