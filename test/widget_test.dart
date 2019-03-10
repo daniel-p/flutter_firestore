@@ -7,24 +7,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flutter_firestore/main.dart';
+import 'package:Flutters/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('App title, theme and correct buttons are displayed', (WidgetTester tester) async {
+  await tester.pumpWidget(MyApp());
+
+  MaterialApp app = find.byType(MaterialApp).evaluate().first.widget;
+  expect(app.theme.brightness, equals(Brightness.light));
+  expect(app.title, 'Flutters');
+
+  expect((find.byIcon(Icons.send)), findsOneWidget);
+  expect(find.byIcon(Icons.camera_alt), findsOneWidget);
+  });
+
+  testWidgets('Write message', (WidgetTester tester) async {
     await tester.pumpWidget(MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Moni is awesome');
+    expect(find.text('Moni is awesome'), findsOneWidget);
   });
 }
