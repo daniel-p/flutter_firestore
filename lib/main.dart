@@ -25,8 +25,8 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
           textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.black),
           iconTheme: Theme.of(context)
-            .iconTheme
-            .copyWith(color: Theme.of(context).primaryColor),
+              .iconTheme
+              .copyWith(color: Theme.of(context).primaryColor),
         ),
         iconTheme: Theme.of(context)
             .iconTheme
@@ -67,8 +67,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return DateFormat('EEE H:mm').format(date);
   }
 
-  void _showAlert(String content, [String title = "Oops!"]) {
-    showDialog(
+  Future<Null> _showAlert(String content, [String title = "Oops!"]) {
+    return showDialog<Null>(
         context: context,
         builder: (context) {
           return AlertDialog(
@@ -81,7 +81,34 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-              )
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<bool> _showPrompt(String content, [String title = "Hey!"]) {
+    return showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: <Widget>[
+              FlatButton(
+                key: Key("cancelPromptButton"),
+                child: Text("Cancel"),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              FlatButton(
+                key: Key("okPromptButton"),
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
             ],
           );
         });
@@ -109,9 +136,9 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       return true;
     } on PlatformException catch (e) {
-      _showAlert(e.code);
+      await _showAlert(e.code);
     } catch (e) {
-      _showAlert(e.toString());
+      await _showAlert(e.toString());
     }
     return false;
   }
@@ -119,17 +146,20 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<bool> _signOut() async {
     try {
       if (await _firebaseAuth.currentUser() != null) {
+        if (await _showPrompt("Sign out?") != true) {
+          return false;
+        }
         await _firebaseAuth.signOut();
       }
       if (_googleSignIn.currentUser != null) {
         await _googleSignIn.signOut();
-        _showAlert("You have signed out", "Cya!");
+        await _showAlert("You have signed out", "Cya!");
       }
       return true;
     } on PlatformException catch (e) {
-      _showAlert(e.code);
+      await _showAlert(e.code);
     } catch (e) {
-      _showAlert(e.toString());
+      await _showAlert(e.toString());
     }
     return false;
   }
@@ -139,7 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    if (await _signIn() == false) {
+    if (await _signIn() != true) {
       return;
     }
 
@@ -163,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (imageFile == null) {
       return;
     }
-    if (await _signIn() == false) {
+    if (await _signIn() != true) {
       return;
     }
     var ref = FirebaseStorage.instance
@@ -256,11 +286,11 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: <Widget>[
-            IconButton(
-              key: Key("signOutButton"),
-              icon: Icon(Icons.exit_to_app),
-              onPressed: () => _signOut(),
-            ),
+          IconButton(
+            key: Key("signOutButton"),
+            icon: Icon(Icons.exit_to_app),
+            onPressed: () => _signOut(),
+          ),
         ],
       ),
       body: Column(
@@ -276,16 +306,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
-                return ListView.separated(
-                  key: Key("messagesListView"),
-                  separatorBuilder: (context, index) => Container(
-                        height: 4,
-                      ),
-                  itemBuilder: (context, index) =>
-                      _buildListItem(context, snapshot.data.documents[index]),
-                  itemCount: snapshot.data.documents.length,
-                  reverse: true,
-                  padding: EdgeInsets.all(8),
+                return Scrollbar(
+                  child: ListView.separated(
+                    key: Key("messagesListView"),
+                    separatorBuilder: (context, index) => Container(
+                          height: 4,
+                        ),
+                    itemBuilder: (context, index) =>
+                        _buildListItem(context, snapshot.data.documents[index]),
+                    itemCount: snapshot.data.documents.length,
+                    reverse: true,
+                    padding: EdgeInsets.all(8),
+                  ),
                 );
               },
             ),
