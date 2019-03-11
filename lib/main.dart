@@ -76,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
             content: Text(content),
             actions: <Widget>[
               FlatButton(
+                key: Key("okAlertButton"),
                 child: Text("OK"),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -256,6 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         actions: <Widget>[
             IconButton(
+              key: Key("signOutButton"),
               icon: Icon(Icons.exit_to_app),
               onPressed: () => _signOut(),
             ),
@@ -275,6 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   return Center(child: CircularProgressIndicator());
                 }
                 return ListView.separated(
+                  key: Key("messagesListView"),
                   separatorBuilder: (context, index) => Container(
                         height: 4,
                       ),
@@ -291,6 +294,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
             child: Scrollbar(
               child: TextField(
+                key: Key("messageTextField"),
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 textCapitalization: TextCapitalization.sentences,
@@ -310,14 +314,17 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             children: <Widget>[
               IconButton(
+                key: Key("galleryButton"),
                 icon: Icon(Icons.photo),
                 onPressed: () => _sendPhoto(ImageSource.gallery),
               ),
               IconButton(
+                key: Key("cameraButton"),
                 icon: Icon(Icons.camera_alt),
                 onPressed: () => _sendPhoto(ImageSource.camera),
               ),
               IconButton(
+                key: Key("sendButton"),
                 icon: Icon(Icons.send),
                 onPressed: () => _sendText(textController.text),
               ),

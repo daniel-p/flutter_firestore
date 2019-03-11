@@ -1,6 +1,8 @@
 name: Flutters
 description: A cross-platform chat app developed with Flutter and Firebase
-author: daniel-p
+authors:
+  - Daniel Parashkevov
+  - Monika Koykova
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
