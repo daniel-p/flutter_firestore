@@ -62,6 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
       date = timestamp;
     } else if (timestamp is int) {
       date = DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true);
+    } else if (timestamp is Timestamp) {
+      date = timestamp.toDate();
     } else {
       return '';
     }
