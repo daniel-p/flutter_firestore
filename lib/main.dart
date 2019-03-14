@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
         canvasColor: Colors.white,
       ),
       home: MyHomePage(title: 'Flutters'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -293,78 +294,80 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: StreamBuilder(
-              stream: Firestore.instance
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .limit(50)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                return Scrollbar(
-                  child: ListView.separated(
-                    key: Key("messagesListView"),
-                    separatorBuilder: (context, index) => Container(
-                          height: 4,
-                        ),
-                    itemBuilder: (context, index) =>
-                        _buildListItem(context, snapshot.data.documents[index]),
-                    itemCount: snapshot.data.documents.length,
-                    reverse: true,
-                    padding: EdgeInsets.all(8),
-                  ),
-                );
-              },
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: StreamBuilder(
+                stream: Firestore.instance
+                    .collection('messages')
+                    .orderBy('timestamp', descending: true)
+                    .limit(50)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  return Scrollbar(
+                    child: ListView.separated(
+                      key: Key("messagesListView"),
+                      separatorBuilder: (context, index) => Container(
+                            height: 4,
+                          ),
+                      itemBuilder: (context, index) => _buildListItem(
+                          context, snapshot.data.documents[index]),
+                      itemCount: snapshot.data.documents.length,
+                      reverse: true,
+                      padding: EdgeInsets.all(8),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          Divider(height: 1),
-          Container(
-            child: Scrollbar(
-              child: TextField(
-                key: Key("messageTextField"),
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (s) => _sendText(textController.text),
-                controller: textController,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Type a message...',
-                  contentPadding: EdgeInsets.fromLTRB(12, 12, 6, 6),
+            Divider(height: 1),
+            Container(
+              child: Scrollbar(
+                child: TextField(
+                  key: Key("messageTextField"),
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
+                  onSubmitted: (s) => _sendText(textController.text),
+                  controller: textController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Type a message...',
+                    contentPadding: EdgeInsets.fromLTRB(12, 12, 6, 6),
+                  ),
                 ),
               ),
+              constraints: BoxConstraints(
+                maxHeight: 96,
+              ),
             ),
-            constraints: BoxConstraints(
-              maxHeight: 96,
+            Row(
+              children: <Widget>[
+                IconButton(
+                  key: Key("galleryButton"),
+                  icon: Icon(Icons.photo),
+                  onPressed: () => _sendPhoto(ImageSource.gallery),
+                ),
+                IconButton(
+                  key: Key("cameraButton"),
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: () => _sendPhoto(ImageSource.camera),
+                ),
+                IconButton(
+                  key: Key("sendButton"),
+                  icon: Icon(Icons.send),
+                  onPressed: () => _sendText(textController.text),
+                ),
+              ],
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
             ),
-          ),
-          Row(
-            children: <Widget>[
-              IconButton(
-                key: Key("galleryButton"),
-                icon: Icon(Icons.photo),
-                onPressed: () => _sendPhoto(ImageSource.gallery),
-              ),
-              IconButton(
-                key: Key("cameraButton"),
-                icon: Icon(Icons.camera_alt),
-                onPressed: () => _sendPhoto(ImageSource.camera),
-              ),
-              IconButton(
-                key: Key("sendButton"),
-                icon: Icon(Icons.send),
-                onPressed: () => _sendText(textController.text),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          ),
-        ],
-        crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+          crossAxisAlignment: CrossAxisAlignment.start,
+        ),
       ),
     );
   }
